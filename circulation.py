@@ -42,17 +42,13 @@ class Circulation:
         :return: time derivatives of state variables
         """
 
-        """
-        WRITE CODE HERE
-        Implement this by deciding whether the model is in a filling, ejecting, or isovolumic phase and using 
-        the corresponding dynamic matrix. 
-         
-        As discussed in class, be careful about starting and ending the ejection phase. One approach is to check 
-        whether the flow is >0, and another is to check whether x1>x3, but neither will work. The first won't start 
-        propertly because flow isn't actually updated outside the ejection phase. The second won't end properly 
-        because blood inertance will keep the blood moving briefly up the pressure gradient at the end of systole. 
-        If the ejection phase ends in this time, the flow will remain non-zero until the next ejection phase. 
-        """
+        if (x[3] > 0) or (x[0] > x[2]):
+            return np.matmul(self.ejection_phase_dynamic_matrix(t), x)
+        
+        if x[1] > x[0]:
+            return np.matmul(self.filling_phase_dynamic_matrix(t), x)
+
+        return np.matmul(self.isovolumic_phase_dynamic_matrix(t), x)
 
     def isovolumic_phase_dynamic_matrix(self, t):
         """
@@ -83,10 +79,12 @@ class Circulation:
         :param t: time (s)
         :return: A matrix for filling phase
         """
-
-        """
-        WRITE CODE HERE
-        """
+        el = self.elastance(t)
+        del_dt = self.elastance_finite_difference(t)
+        return [[del_dt/el - el/self.R2, el/self.R2, 0, 0],
+                [1/(self.R2*self.C2), -(self.R1+self.R2)/(self.R1*self.R2*self.C2), 1/(self.R1*self.C2), 0],
+                [0, 1/(self.R1*self.C3), -1/(self.R1*self.C3), 0],
+                [0, 0, 0, 0]]
 
     def elastance(self, t):
         """
