@@ -172,7 +172,8 @@ def plot_pressure_volume_loops(model):
     # High Systemic Resistance
     model.R1 = 2
     time, states = model.simulate(simulation_time)
-    plt.plot(model.left_ventricular_blood_volume(time[start_index:], states[start_index:]), states[start_index:, 0], 'g', label='High Systemic Resistance')
+    plt.plot(model.left_ventricular_blood_volume(time[start_index:], states[start_index:]), 
+             states[start_index:, 0], 'g', label='High Systemic Resistance')
 
     # Aortic Stenosis
     model.R1 = 0.5
