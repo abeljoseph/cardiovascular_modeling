@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.integrate import solve_ivp
+import matplotlib.pyplot as plt
 
 
 class Circulation:
@@ -41,13 +42,12 @@ class Circulation:
         :param x: state variables [ventricular pressure; atrial pressure; arterial pressure; aortic flow]
         :return: time derivatives of state variables
         """
+        if x[1] > x[0]:
+            return np.matmul(self.filling_phase_dynamic_matrix(t), x)
 
         if (x[3] > 0) or (x[0] > x[2]):
             return np.matmul(self.ejection_phase_dynamic_matrix(t), x)
         
-        if x[1] > x[0]:
-            return np.matmul(self.filling_phase_dynamic_matrix(t), x)
-
         return np.matmul(self.isovolumic_phase_dynamic_matrix(t), x)
 
     def isovolumic_phase_dynamic_matrix(self, t):
@@ -115,11 +115,13 @@ class Circulation:
         :param total_time: seconds to simulate
         :return: time, state (times at which the state is estimated, state vector at each time)
         """
+        # Put all the blood pressure in the atria as an initial condition.
+        x0 = [0, self.non_slack_blood_volume/self.C2, 0, 0]
+        t_span = (0, total_time)
+        dt = 0.001
 
-        """
-        WRITE CODE HERE
-        Put all the blood pressure in the atria as an initial condition.
-        """
+        sol = solve_ivp(self.get_derivative, t_span, x0, max_step=dt)
+        return sol.t, sol.y.T
 
     def _get_normalized_time(self, t):
         """
@@ -128,3 +130,31 @@ class Circulation:
         """
         return (t % self.tc) / self.Tmax
 
+
+def plot_graphs(model, time, states):
+    aortic_pressure = states[:, 0] - states[:, 3] * model.R3
+
+    plt.title('States of Circulation versus Time')
+    plt.plot(time, states[:, 0], 'c', label="Ventricular Pressure")
+    plt.plot(time, states[:, 1], 'r', label="Atrial Pressure")
+    plt.plot(time, states[:, 2], 'g', label="Arterial Pressure")
+    plt.plot(time, aortic_pressure, 'k', label="Aortic Pressure")
+    # plt.plot(time, self.left_ventricular_blood_volume(time, states), 'r', label="Left Ventricular Volume")
+    plt.ylabel('Pressure (mmHg)')
+    plt.xlabel('Time (s)')
+    plt.legend(loc="upper left")
+    plt.show()
+
+
+if __name__ == '__main__':
+    ################ Q1 ################
+    model = Circulation(75, 2.0, 0.06)
+    
+    ################ Q2 ################
+    t, x = model.simulate(5)
+    plot_graphs(model, t, x)
+
+    ################ Q3 ################
+    # print(model.left_ven)
+
+    ################ Q4 ################
