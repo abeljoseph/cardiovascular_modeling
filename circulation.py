@@ -130,18 +130,62 @@ class Circulation:
         """
         return (t % self.tc) / self.Tmax
 
+    def left_ventricular_blood_volume(self, t, x):
+        """
+        :param t: time (needed because elastance is a function of time)
+        :param x: state variables [ventricular pressure; atrial pressure; arterial pressure; aortic flow]
+        :return: time-varying blood volume in left ventricle
+        """
+        # Assume a slack ventricular volume of 20mL.
+        slack_volume = 20
+        return x[:, 0] / self.elastance(t) + slack_volume
 
-def plot_graphs(model, time, states):
-    aortic_pressure = states[:, 0] - states[:, 3] * model.R3
+
+def plot_pressure_graphs(model, time, states):
+    aortic_pressure = states[:, 2] + states[:, 3] * model.R4
 
     plt.title('States of Circulation versus Time')
-    plt.plot(time, states[:, 0], 'c', label="Ventricular Pressure")
-    plt.plot(time, states[:, 1], 'r', label="Atrial Pressure")
-    plt.plot(time, states[:, 2], 'g', label="Arterial Pressure")
-    plt.plot(time, aortic_pressure, 'k', label="Aortic Pressure")
-    # plt.plot(time, self.left_ventricular_blood_volume(time, states), 'r', label="Left Ventricular Volume")
+    plt.plot(time, states[:, 0], 'k', label='Ventricular Pressure')
+    plt.plot(time, states[:, 1], 'g', label='Atrial Pressure')
+    plt.plot(time, states[:, 2], 'r', label='Arterial Pressure')
+    plt.plot(time, aortic_pressure, 'c', label='Aortic Pressure')
     plt.ylabel('Pressure (mmHg)')
     plt.xlabel('Time (s)')
+    plt.legend(loc='upper left')
+    plt.show()
+
+
+def plot_pressure_volume_loops(model):
+    initial_R1 = model.R1
+    initial_R3 = model.R3
+
+    simulation_time = 10
+    dt = 0.001 # Same as in Circulation.simulate()
+    start_index = int(model.tc * 5 / dt) # Start at the index after 5 contractions
+    
+    plt.title('Pressure Volume Loops')
+
+    # Normal 
+    time, states = model.simulate(simulation_time)
+    plt.plot(model.left_ventricular_blood_volume(time[start_index:], states[start_index:]), states[start_index:, 0], 'k', label='Normal')
+
+    # High Systemic Resistance
+    model.R1 = 2
+    time, states = model.simulate(simulation_time)
+    plt.plot(model.left_ventricular_blood_volume(time[start_index:], states[start_index:]), states[start_index:, 0], 'g', label='High Systemic Resistance')
+
+    # Aortic Stenosis
+    model.R1 = 0.5
+    model.R3 = 0.2
+    time, states = model.simulate(simulation_time)
+    plt.plot(model.left_ventricular_blood_volume(time[start_index:], states[start_index:]), states[start_index:, 0], 'r', label='Aortic Stenosis')
+
+    # Reset Initial Values
+    model.R1 = initial_R1
+    model.R3 = initial_R3
+
+    plt.ylabel('Pressure (mmHg)')
+    plt.xlabel('Volume (ml)')
     plt.legend(loc="upper left")
     plt.show()
 
@@ -152,9 +196,10 @@ if __name__ == '__main__':
     
     ################ Q2 ################
     t, x = model.simulate(5)
-    plot_graphs(model, t, x)
+    plot_pressure_graphs(model, t, x)
 
     ################ Q3 ################
-    # print(model.left_ven)
+    print('Left Ventricular Blood Volume: {}'.format(model.left_ventricular_blood_volume(t, x)))
 
     ################ Q4 ################
+    plot_pressure_volume_loops(model)
