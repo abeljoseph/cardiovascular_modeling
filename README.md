@@ -1,2 +1,2 @@
 # cardiovascular_modeling
-A Cardiovascular Model implemented in Python
+A Cardiovascular model implemented in Python
