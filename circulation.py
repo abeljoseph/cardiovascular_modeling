@@ -38,7 +38,7 @@ class Circulation:
 
 	def get_derivative(self, t, x):
 		"""
-		:param t: time
+		:param t: time (s)
 		:param x: state variables [ventricular pressure; atrial pressure; arterial pressure; aortic flow]
 		:return: time derivatives of state variables
 		"""
@@ -89,7 +89,7 @@ class Circulation:
 
 	def elastance(self, t):
 		"""
-		:param t: time (needed because elastance is a function of time)
+		:param t: time (s; needed because elastance is a function of time)
 		:return: time-varying elastance
 		"""
 		tn = self._get_normalized_time(t)
@@ -113,7 +113,7 @@ class Circulation:
 
 	def simulate(self, total_time):
 		"""
-		:param total_time: seconds to simulate
+		:param total_time: time taken to simulate (s)
 		:return: time, state (times at which the state is estimated, state vector at each time)
 		"""
 		# Put all the blood pressure in the atria as an initial condition.
@@ -126,7 +126,7 @@ class Circulation:
 
 	def _get_normalized_time(self, t):
 		"""
-		:param t: time
+		:param t: time (s)
 		:return: time normalized to self.Tmax (duration of ventricular contraction)
 		"""
 		return (t % self.tc) / self.Tmax
